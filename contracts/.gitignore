@@ -1,0 +1,18 @@
+# Dependencies
+node_modules/
+
+# Environment — NEVER commit these
+.env
+.env.local
+.env*.local
+
+# Hardhat artifacts
+artifacts/
+cache/
+typechain-types/
+
+# Build
+dist/
+
+# OS
+.DS_Store
