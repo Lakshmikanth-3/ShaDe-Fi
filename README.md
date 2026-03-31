@@ -1,110 +1,71 @@
 # ShaDe-Fi
 
-> **DeFi payroll transactions that help Crypto employers.**
+> **The first private exchange on Ethereum.**
 
-ShaDe-Fi is the first confidential AMM on Ethereum using Zama's fhEVM. Every pool reserve is an encrypted `euint128` ciphertext. MEV sandwich attacks are not mitigated — they are **structurally impossible**.
+ShaDe-Fi uses Zama's technology to keep your trades private. Every pool balance is encrypted. This means bots cannot see your trades and cannot front-run you.
 
 ---
 
-## The stunt
+## How it works
 
 ```solidity
-// Normal Uniswap pool — public state, full MEV surface
-uint256 public reserve0;  // 4,821,304 — everyone can read this
+// Normal Exchange — Everyone can see the balance
+uint256 public balance; 
 
-// ShaDe-Fi pool — encrypted state, zero MEV surface
-euint128 internal _reserveA;  // [encrypted] — nobody reads this
+// ShaDe-Fi — Private balance, invisible to bots
+euint128 internal _privateBalance; 
 ```
 
-Two variable declarations. Structurally different security guarantees.
+By hiding the balances, we make sure that your trades are safe and private.
 
 ---
 
-## Quick start
+## Quick Start
 
-### 1. Frontend
+### 1. Run the App
 
 ```bash
 cd frontend
-cp .env.local.example .env.local
-# Fill in your RPC URL and deployed contract addresses
 npm install
 npm run dev
-# → http://localhost:3000
+# Open http://localhost:3000
 ```
 
-### 2. Contracts
+### 2. Network Info
 
-```bash
-cd contracts
-npm install
-cp ../.env.local.example .env  # add your DEPLOYER_PRIVATE_KEY and RPC_URL
-npm run deploy
-# Copy printed addresses to frontend/.env.local
-
-# Mint test tokens to your wallet
-npm run mint
-```
+The app runs on the **Zama Sepolia** testnet.
+- **Network:** `https://ethereum-sepolia-rpc.publicnode.com`
+- **Chain ID:** `11155111`
 
 ---
 
-## Stack
+## Technology
 
-| Layer | Technology |
-|---|---|
-| Smart contracts | Solidity 0.8.24 · Zama fhEVM (`euint128`, TFHE operators, ACL) |
-| Test tokens | ConfidentialERC20 (`ShaDe-USDC`, `ShaDe-ETH`) |
-| Frontend | Next.js 16 · TypeScript · Wagmi · Viem |
-| Encryption | fhEVM.js SDK (client-side encrypt/decrypt) |
-| Design | Space Grotesk + Space Mono · Brutalist Minimalist |
-| UI generation | **Stitch MCP Server** |
-| Network | Ethereum Sepolia with Zama fhEVM executor |
+- **Smart Contracts**: Solidity and Zama fhEVM.
+- **Frontend**: Next.js and Simple CSS.
+- **Privacy**: Hidden balances and secure trade execution.
+- **Design**: Black and Yellow Brutalist Theme.
 
 ---
 
-## Pages
+## Protocol Features
 
-| Route | Description |
-|---|---|
-| `/` | Landing page — hero, proof section, live swap feed |
-| `/dashboard` | Protocol stats, contract addresses, quick actions |
-| `/swap` | Execute confidential swaps with fhEVM encryption |
-| `/pool` | Add/remove liquidity, view encrypted LP position |
-| `/faucet` | Mint test tokens to your wallet |
+- **Private Swap:** Trade tokens without exposing your buy/sell amounts.
+- **Private Pools:** Add liquidity without revealing your position size.
+- **Simple Stats:** View network health in real-time.
+- **Token Faucet:** Get free test tokens to try the app.
 
 ---
 
-## Deployed Contracts (Sepolia)
+## Contract Addresses
 
 | Contract | Address |
 |---|---|
-| ShadeFactory | `0xd36b3657c2e3795e32f07a2f135ba51f8306521d` |
-| ShadeRouter | `0x97d23f400fcccc7ba0ed53014ee83fab89563749` |
-| ShaDe-USDC | `0x19b9cc9a2eac8d5275765e1584045258e6bc544a` |
-| ShaDe-ETH | `0x3b636e4ce4d4991115cba54f57ec451702371179` |
+| Main Factory | `0xd36b3657c2e3795e32f07a2f135ba51f8306521d` |
+| Trade Router | `0x97d23f400fcccc7ba0ed53014ee83fab89563749` |
+| shUSDC Token | `0x19b9cc9a2eac8d5275765e1584045258e6bc544a` |
+| shETH Token | `0x3b636e4ce4d4991115cba54f57ec451702371179` |
 
 ---
 
-## Sponsors
-
-| Sponsor | Usage |
-|---|---|
-| **Zama** | fhEVM is the core — `euint128` reserves, TFHE operators, ACL, ConfidentialERC20 |
-| **Starknet** | Privacy DeFi track — private swaps, hidden positions |
-| **Filecoin / Protocol Labs** | Encrypted swap event archival to FVM |
-| **Ethereum Foundation** | Runs on Ethereum Sepolia — no new chain required |
-
----
-
-## How MEV is structurally impossible
-
-1. Bot queries `ShadePool.getEncryptedReserves()`
-2. Gets `(euint128(0x4a3f...), euint128(0x8c2d...))`
-3. Cannot decrypt — no ACL permission
-4. Cannot compute price impact
-5. Cannot construct a profitable sandwich
-6. **Game over.**
-
----
-
-*ShaDe-Fi · fhEVM · Brutalist Minimalist · Yellow #FFE500 + Black #0A0A0A*
+*ShaDe-Fi · Private Exchange · Black & Yellow #FFE500*

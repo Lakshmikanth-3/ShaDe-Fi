@@ -17,8 +17,10 @@ const config: HardhatUserConfig = {
     artifacts: "./artifacts",
   },
   networks: {
+    // Zama fhEVM co-processor runs ON Ethereum Sepolia (chain 11155111)
+    // FHE precompile contracts are pre-deployed by Zama at fixed addresses on Sepolia
     fhevm_sepolia: {
-      url: process.env.NEXT_PUBLIC_RPC_URL || "https://sepolia.infura.io/v3/YOUR_KEY",
+      url: "https://sepolia.infura.io/v3/2bc52207ae9541df8c9ad7f21468f950",
       chainId: 11155111,
       accounts: process.env.DEPLOYER_PRIVATE_KEY
         ? [process.env.DEPLOYER_PRIVATE_KEY]
@@ -31,3 +33,4 @@ const config: HardhatUserConfig = {
 };
 
 export default config;
+

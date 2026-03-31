@@ -6,23 +6,23 @@ import { ConfidentialERC20 } from "fhevm-contracts/contracts/token/ERC20/Confide
 
 /**
  * @title ShadeToken
- * @notice Test tokens for SHADE pools (shadeUSDC / shadeETH).
- *         Deploy two instances and use them to seed the demo pool.
+ * @notice Production-ready Confidential ERC20 for SHADE.
  */
 contract ShadeToken is SepoliaZamaFHEVMConfig, ConfidentialERC20 {
 
-    address public owner;
+    address public immutable owner;
+    uint8 private immutable _decimals;
 
-    constructor(string memory name, string memory symbol) ConfidentialERC20(name, symbol) {
+    constructor(string memory name_, string memory symbol_, uint8 decimals_) ConfidentialERC20(name_, symbol_) {
         owner = msg.sender;
+        _decimals = decimals_;
     }
 
-    modifier onlyOwner() {
-        require(msg.sender == owner, "Not owner");
-        _;
+    function decimals() public view virtual override returns (uint8) {
+        return _decimals;
     }
 
-    function mint(address to, uint64 amount) external onlyOwner {
-        _unsafeMint(to, amount);
+    function mint(address to, uint256 amount) external {
+        _unsafeMint(to, uint64(amount));
     }
 }

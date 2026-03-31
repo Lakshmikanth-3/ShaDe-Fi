@@ -2,7 +2,7 @@
 pragma solidity ^0.8.24;
 
 import { SepoliaZamaFHEVMConfig } from "fhevm/config/ZamaFHEVMConfig.sol";
-import { TFHE, euint128, ebool, einput } from "fhevm/lib/TFHE.sol";
+import { TFHE, euint64, ebool, einput } from "fhevm/lib/TFHE.sol";
 
 /**
  * @title ShadePool
@@ -15,16 +15,16 @@ contract ShadePool is SepoliaZamaFHEVMConfig {
     address public tokenA;
     address public tokenB;
 
-    euint128 internal _reserveA;
-    euint128 internal _reserveB;
+    euint64 internal _reserveA;
+    euint64 internal _reserveB;
 
-    mapping(address => euint128) internal _lpShares;
-    euint128 internal _totalShares;
+    mapping(address => euint64) internal _lpShares;
+    euint64 internal _totalShares;
 
     uint256 public constant FEE_BPS   = 30;
     uint256 public constant FEE_DENOM = 10000;
 
-    uint128 public _lastPublicReserveIn;
+    uint64 public _lastPublicReserveIn;
 
     bool private _initialized;
 
@@ -50,8 +50,8 @@ contract ShadePool is SepoliaZamaFHEVMConfig {
         if (_initialized) revert AlreadyInitialized();
         _initialized = true;
 
-        euint128 amountA = TFHE.asEuint128(encAmountA, proofA);
-        euint128 amountB = TFHE.asEuint128(encAmountB, proofB);
+        euint64 amountA = TFHE.asEuint64(encAmountA, proofA);
+        euint64 amountB = TFHE.asEuint64(encAmountB, proofB);
 
         _transferIn(tokenA, msg.sender, amountA);
         _transferIn(tokenB, msg.sender, amountB);
@@ -71,16 +71,13 @@ contract ShadePool is SepoliaZamaFHEVMConfig {
 
     function swap(
         address tokenIn,
-        einput encAmountIn,
-        bytes calldata proofIn
-    ) external returns (euint128 amountOut) {
+        euint64 amountIn
+    ) external returns (euint64 amountOut) {
         require(tokenIn == tokenA || tokenIn == tokenB);
-
-        euint128 amountIn = TFHE.asEuint128(encAmountIn, proofIn);
         bool aToB = (tokenIn == tokenA);
 
-        euint128 feeAmount   = TFHE.div(TFHE.mul(amountIn, uint128(FEE_BPS)), uint128(FEE_DENOM));
-        euint128 amountInNet = TFHE.sub(amountIn, feeAmount);
+        euint64 feeAmount   = TFHE.div(TFHE.mul(amountIn, uint64(FEE_BPS)), uint64(FEE_DENOM));
+        euint64 amountInNet = TFHE.sub(amountIn, feeAmount);
 
         if (aToB) {
             amountOut = _computeOut(_reserveA, _reserveB, amountInNet);
@@ -106,14 +103,14 @@ contract ShadePool is SepoliaZamaFHEVMConfig {
     }
 
     function _computeOut(
-        euint128 reserveIn,
-        euint128 reserveOut,
-        euint128 amountIn
-    ) internal returns (euint128) {
-        euint128 numerator = TFHE.mul(reserveOut, amountIn);
-        uint128 denominator = _lastPublicReserveIn > 0
+        euint64 reserveIn,
+        euint64 reserveOut,
+        euint64 amountIn
+    ) internal returns (euint64) {
+        euint64 numerator = TFHE.mul(reserveOut, amountIn);
+        uint64 denominator = _lastPublicReserveIn > 0
             ? _lastPublicReserveIn
-            : uint128(block.number) + 1;
+            : uint64(block.number) + 1;
         return TFHE.div(numerator, denominator);
     }
 
@@ -121,8 +118,8 @@ contract ShadePool is SepoliaZamaFHEVMConfig {
         einput encAmountA, bytes calldata proofA,
         einput encAmountB, bytes calldata proofB
     ) external {
-        euint128 amountA = TFHE.asEuint128(encAmountA, proofA);
-        euint128 amountB = TFHE.asEuint128(encAmountB, proofB);
+        euint64 amountA = TFHE.asEuint64(encAmountA, proofA);
+        euint64 amountB = TFHE.asEuint64(encAmountB, proofB);
 
         _transferIn(tokenA, msg.sender, amountA);
         _transferIn(tokenB, msg.sender, amountB);
@@ -144,13 +141,13 @@ contract ShadePool is SepoliaZamaFHEVMConfig {
     function removeLiquidity(
         einput encShares, bytes calldata proofShares
     ) external {
-        euint128 shares    = TFHE.asEuint128(encShares, proofShares);
+        euint64 shares    = TFHE.asEuint64(encShares, proofShares);
         ebool hasEnough    = TFHE.le(shares, _lpShares[msg.sender]);
-        euint128 burnShares = TFHE.select(hasEnough, shares, TFHE.asEuint128(0));
+        euint64 burnShares = TFHE.select(hasEnough, shares, TFHE.asEuint64(0));
 
-        uint128 totalSnap   = 1;
-        euint128 amountAOut = TFHE.div(TFHE.mul(_reserveA, burnShares), totalSnap);
-        euint128 amountBOut = TFHE.div(TFHE.mul(_reserveB, burnShares), totalSnap);
+        uint64 totalSnap   = 1;
+        euint64 amountAOut = TFHE.div(TFHE.mul(_reserveA, burnShares), totalSnap);
+        euint64 amountBOut = TFHE.div(TFHE.mul(_reserveB, burnShares), totalSnap);
 
         _lpShares[msg.sender] = TFHE.sub(_lpShares[msg.sender], burnShares);
         _totalShares = TFHE.sub(_totalShares, burnShares);
@@ -170,24 +167,24 @@ contract ShadePool is SepoliaZamaFHEVMConfig {
         emit LiquidityRemoved(msg.sender);
     }
 
-    function getEncryptedReserves() external view returns (euint128, euint128) {
+    function getEncryptedReserves() external view returns (euint64, euint64) {
         return (_reserveA, _reserveB);
     }
 
-    function getEncryptedLPShare(address provider) external view returns (euint128) {
+    function getEncryptedLPShare(address provider) external view returns (euint64) {
         return _lpShares[provider];
     }
 
-    function _transferIn(address token, address from, euint128 amount) internal {
+    function _transferIn(address token, address from, euint64 amount) internal {
         IConfidentialERC20(token).transferFrom(from, address(this), amount);
     }
 
-    function _transferOut(address token, address to, euint128 amount) internal {
+    function _transferOut(address token, address to, euint64 amount) internal {
         IConfidentialERC20(token).transfer(to, amount);
     }
 }
 
 interface IConfidentialERC20 {
-    function transferFrom(address from, address to, euint128 amount) external;
-    function transfer(address to, euint128 amount) external;
+    function transferFrom(address from, address to, euint64 amount) external;
+    function transfer(address to, euint64 amount) external;
 }

@@ -1,18 +1,30 @@
-# Dependencies
-node_modules/
-
-# Environment — NEVER commit these
-.env
-.env.local
-.env*.local
-
-# Hardhat artifacts
-artifacts/
-cache/
+# Hardhat
+cache
+artifacts
+/node_modules
+/.pnp
+.pnp.js
 typechain-types/
 
-# Build
-dist/
+# Hardhat Ignition
+ignition/deployments
 
-# OS
-.DS_Store
+# Environment
+.env
+
+# Build files
+/out
+/build
+/cache
+
+# Logs and debug
+deploy_log.txt
+deploy_log_utf8.txt
+deploy_output.txt
+test_log.txt
+test_log_utf8.txt
+addresses.txt
+
+# Coverage
+/coverage
+/coverage.json
