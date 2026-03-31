@@ -1,47 +1,44 @@
-import type { Metadata } from 'next'
-import { Space_Grotesk, Space_Mono } from 'next/font/google'
-import './globals.css'
-import { Providers } from '@/components/Providers'
-import { Navbar } from '@/components/layout/Navbar'
+import type React from "react"
+import type { Metadata, Viewport } from "next"
+import { Space_Grotesk, Space_Mono } from "next/font/google"
+import { Analytics } from "@vercel/analytics/next"
+import { LenisProvider } from "@/components/lenis-provider"
+import { Providers } from "@/components/providers"
+import "./globals.css"
 
 const spaceGrotesk = Space_Grotesk({
-  subsets: ['latin'],
-  weight: ['400', '500', '700'],
-  variable: '--font-grotesk',
-  display: 'swap',
+  subsets: ["latin"],
+  variable: "--font-sans",
 })
 
 const spaceMono = Space_Mono({
-  subsets: ['latin'],
-  weight: ['400', '700'],
-  variable: '--font-mono',
-  display: 'swap',
+  subsets: ["latin"],
+  variable: "--font-mono",
+  weight: ["400", "700"],
 })
 
 export const metadata: Metadata = {
-  title: 'ShaDe-Fi — DeFi Payroll Transactions for Crypto Employers',
-  description:
-    'ShaDe-Fi is the first confidential AMM on Ethereum. Encrypted reserves make MEV structurally impossible. DeFi payroll transactions that help Crypto employers pay their teams without MEV extraction.',
-  keywords: ['DeFi', 'AMM', 'MEV', 'fhEVM', 'confidential', 'payroll', 'crypto employers', 'Zama'],
-  openGraph: {
-    title: 'ShaDe-Fi — DeFi Payroll Transactions for Crypto Employers',
-    description: 'The pool is blind. Encrypted reserves. Zero MEV.',
-    type: 'website',
-  },
+  title: "SHADEFI | Confidential AMM on fhEVM",
+  description: "The first confidential AMM on Ethereum using Zama's fhEVM. Pool reserves are encrypted. MEV is structurally impossible.",
+  keywords: ["FHE", "fhEVM", "Zama", "Confidentiality", "AMM", "MEV", "DEX", "Ethereum"],
+}
+
+export const viewport: Viewport = {
+  themeColor: "#10B981",
 }
 
 export default function RootLayout({
   children,
-}: {
+}: Readonly<{
   children: React.ReactNode
-}) {
+}>) {
   return (
-    <html lang="en" className={`${spaceGrotesk.variable} ${spaceMono.variable}`}>
-      <body>
+    <html lang="en" className="light overflow-x-hidden">
+      <body className={`${spaceGrotesk.variable} ${spaceMono.variable} font-sans antialiased bg-white text-black`}>
         <Providers>
-          <Navbar />
-          <main>{children}</main>
+          <LenisProvider>{children}</LenisProvider>
         </Providers>
+        <Analytics />
       </body>
     </html>
   )

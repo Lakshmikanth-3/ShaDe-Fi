@@ -1,131 +1,115 @@
-'use client'
+"use client"
 
-import { useState, useEffect } from 'react'
-import { useAccount, useWriteContract } from 'wagmi'
-import { parseAbi } from 'viem'
-import { SHADE_USDC_ADDRESS, SHADE_ETH_ADDRESS } from '@/lib/contracts'
-
-const SHADE_TOKEN_ABI = parseAbi([
-  'function mint(address to, uint64 amount) external',
-  'function name() view returns (string)',
-])
+import { useState } from "react"
+import { Header } from "@/components/header"
+import { Zap, Activity, ShieldAlert, Loader2 } from "lucide-react"
+import { useAccount, useWriteContract } from "wagmi"
+import { ERC20_ABI } from "@/lib/contracts"
+import { TOKENS } from "@/lib/constants"
+import { toast } from "sonner"
 
 export default function FaucetPage() {
   const { address, isConnected } = useAccount()
-  const [mounted, setMounted] = useState(false)
-  const [minting, setMinting] = useState<string | null>(null)
-  const [done, setDone] = useState<string[]>([])
+  const { writeContractAsync } = useWriteContract()
+  const [usdcPending, setUsdcPending] = useState(false)
+  const [ethPending, setEthPending] = useState(false)
 
-  useEffect(() => {
-    setMounted(true)
-  }, [])
+  const handleMintUsdc = async () => {
+    if (!address) return toast.error("Please connect your wallet")
+    setUsdcPending(true)
+    try {
+      await writeContractAsync({
+        address: TOKENS.USDC as `0x${string}`,
+        abi: ERC20_ABI,
+        functionName: "mint",
+        args: [address, BigInt(1000e6)],
+      })
+      toast.success("1,000 shUSDC added to your wallet!")
+    } catch (e: any) {
+      toast.error(e.message || "Minting failed")
+    } finally {
+      setUsdcPending(false)
+    }
+  }
 
-  const { writeContract, isPending } = useWriteContract()
-
-  if (!mounted) return null
-
-  const mint = async (token: 'USDC' | 'ETH') => {
-    if (!address) return
-    setMinting(token)
-
-    const contractAddr = token === 'USDC' ? SHADE_USDC_ADDRESS : SHADE_ETH_ADDRESS
-    // Mint 10,000 USDC or 5 ETH equivalent (uint64 amounts)
-    const amount = token === 'USDC' ? 10_000_000_000n : 5_000_000_000_000n
-
-    writeContract(
-      {
-        address: contractAddr,
-        abi: SHADE_TOKEN_ABI,
-        functionName: 'mint',
-        args: [address, amount],
-      },
-      {
-        onSuccess: () => {
-          setDone(prev => [...prev, token])
-          setMinting(null)
-        },
-        onError: (e) => {
-          console.error(e)
-          setMinting(null)
-        },
-      }
-    )
+  const handleMintEth = async () => {
+    if (!address) return toast.error("Please connect your wallet")
+    setEthPending(true)
+    try {
+      await writeContractAsync({
+        address: TOKENS.WETH as `0x${string}`,
+        abi: ERC20_ABI,
+        functionName: "mint",
+        args: [address, BigInt(1e18)],
+      })
+      toast.success("1.0 shETH added to your wallet!")
+    } catch (e: any) {
+      toast.error(e.message || "Minting failed")
+    } finally {
+      setEthPending(false)
+    }
   }
 
   return (
-    <div className="swap-page">
-      <div className="swap-card">
-        <h1 className="swap-title">FAUCET</h1>
-        <p style={{ fontFamily: 'var(--font-mono)', fontSize: '13px', color: 'var(--gray)', marginBottom: '24px' }}>
-          // Mint test tokens to your connected wallet. Deployer only — testnet use only.
-        </p>
+    <div className="flex min-h-screen flex-col bg-black text-white font-sans selection:bg-[#FFE500] selection:text-black">
+      <Header />
+      
+      <main className="flex-1 flex flex-col items-center justify-center p-6 py-12 relative overflow-hidden bg-black font-bold italic">
+        <div 
+          className="absolute inset-0 opacity-[0.02] pointer-events-none" 
+          style={{ backgroundImage: 'radial-gradient(circle at 1px 1px, #FFE500 1px, transparent 0)', backgroundSize: '40px 40px' }} 
+        />
 
-        <div className="section-rule" />
+        <div className="w-full max-w-[600px] relative z-10">
+          <div className="space-y-4 mb-20 text-left border-b-4 border-white/10 pb-10">
+             <span className="font-mono text-[#FFE500] text-[10px] font-black uppercase tracking-widest italic flex items-center gap-2">
+               <Activity className="w-3 h-3" /> FHE Liquidity System
+             </span>
+             <h1 className="text-7xl font-black uppercase tracking-tighter italic leading-none">Faucet.</h1>
+             <p className="text-white/50 text-[11px] uppercase tracking-wide mt-8 italic max-w-lg leading-relaxed underline decoration-2 decoration-[#FFE500] underline-offset-4">
+               Get free test tokens to try out the private exchange. These tokens have no real value and are only for testing the app.
+             </p>
+          </div>
 
-        {/* shadeUSDC */}
-        <div className="token-panel" style={{ marginBottom: '16px' }}>
-          <div className="panel-label">shadeUSDC</div>
-          <div className="panel-row" style={{ justifyContent: 'space-between', marginTop: '8px' }}>
-            <span style={{ fontFamily: 'var(--font-mono)', fontSize: '13px', color: 'var(--gray)' }}>
-              Mint 10,000 shUSDC → {address ? `${address.slice(0, 6)}...${address.slice(-4)}` : 'no wallet'}
-            </span>
-            <button
-              className="btn-primary btn-sm"
-              onClick={() => mint('USDC')}
-              disabled={!isConnected || isPending || minting === 'USDC'}
-            >
-              {minting === 'USDC' ? 'MINTING...' : done.includes('USDC') ? '✓ MINTED' : 'MINT'}
-            </button>
+          <div className="grid md:grid-cols-2 gap-8 text-left">
+             <div className="bg-black border-4 border-white p-0.5 shadow-[12px_12px_0px_0px_#FFE500] rotate-1">
+                <div className="bg-zinc-950 p-8 border-2 border-white flex flex-col h-full">
+                   <div className="space-y-3 flex-1">
+                      <div className="text-[9px] font-black uppercase text-white/30 tracking-widest italic border-b border-white/10 pb-3">Test Token</div>
+                      <div className="text-4xl font-black italic tracking-tighter uppercase text-white">shUSDC</div>
+                      <p className="text-[10px] text-white/40 uppercase tracking-tight italic">Confidential Stablecoin</p>
+                   </div>
+                   
+                   <button 
+                     onClick={handleMintUsdc}
+                     disabled={usdcPending}
+                     className="w-full bg-[#FFE500] text-black font-black py-5 text-lg mt-10 border-2 border-black shadow-[4px_4px_0px_0px_white] hover:shadow-none hover:translate-x-0.5 hover:translate-y-0.5 transition-all flex items-center justify-center gap-3 disabled:opacity-50"
+                   >
+                     {usdcPending ? <Loader2 className="animate-spin h-6 w-6 text-black" /> : "Mint 1000 USDC"}
+                   </button>
+                </div>
+             </div>
+
+             <div className="bg-black border-4 border-white p-0.5 shadow-[12px_12px_0px_0px_white] -rotate-1">
+                <div className="bg-zinc-950 p-8 border-2 border-white flex flex-col h-full">
+                   <div className="space-y-3 flex-1">
+                      <div className="text-[9px] font-black uppercase text-white/30 tracking-widest italic border-b border-white/10 pb-3">Test Token</div>
+                      <div className="text-4xl font-black italic tracking-tighter uppercase text-white">shETH</div>
+                      <p className="text-[10px] text-white/40 uppercase tracking-tight italic">Confidential Ethereum</p>
+                   </div>
+                   
+                   <button 
+                     onClick={handleMintEth}
+                     disabled={ethPending}
+                     className="w-full bg-white text-black font-black py-5 text-lg mt-10 border-2 border-black shadow-[4px_4px_0px_0px_#FFE500] hover:shadow-none hover:translate-x-0.5 hover:translate-y-0.5 transition-all flex items-center justify-center gap-3 disabled:opacity-50"
+                   >
+                     {ethPending ? <Loader2 className="animate-spin h-6 w-6 text-black" /> : "Mint 1.0 ETH"}
+                   </button>
+                </div>
+             </div>
           </div>
         </div>
-
-        {/* shadeETH */}
-        <div className="token-panel" style={{ marginBottom: '24px' }}>
-          <div className="panel-label">shadeETH</div>
-          <div className="panel-row" style={{ justifyContent: 'space-between', marginTop: '8px' }}>
-            <span style={{ fontFamily: 'var(--font-mono)', fontSize: '13px', color: 'var(--gray)' }}>
-              Mint 5 shETH → {address ? `${address.slice(0, 6)}...${address.slice(-4)}` : 'no wallet'}
-            </span>
-            <button
-              className="btn-primary btn-sm"
-              onClick={() => mint('ETH')}
-              disabled={!isConnected || isPending || minting === 'ETH'}
-            >
-              {minting === 'ETH' ? 'MINTING...' : done.includes('ETH') ? '✓ MINTED' : 'MINT'}
-            </button>
-          </div>
-        </div>
-
-        {/* Contract addresses */}
-        <div className="section-rule" />
-        <h3 className="section-heading">CONTRACT ADDRESSES</h3>
-        <div className="info-grid">
-          {[
-            { label: 'shUSDC', addr: SHADE_USDC_ADDRESS },
-            { label: 'shETH', addr: SHADE_ETH_ADDRESS },
-          ].map(({ label, addr }) => (
-            <div className="info-row" key={label}>
-              <span className="info-label">{label}</span>
-              <span className="info-value mono">
-                <a
-                  href={`https://sepolia.etherscan.io/address/${addr}`}
-                  target="_blank"
-                  rel="noreferrer"
-                  style={{ color: 'var(--yellow)', textDecoration: 'none' }}
-                >
-                  {addr.slice(0, 10)}...{addr.slice(-6)} ↗
-                </a>
-              </span>
-            </div>
-          ))}
-        </div>
-
-        {!isConnected && (
-          <p className="connect-note" style={{ marginTop: '16px' }}>
-            Connect wallet to mint tokens.
-          </p>
-        )}
-      </div>
+      </main>
     </div>
   )
 }

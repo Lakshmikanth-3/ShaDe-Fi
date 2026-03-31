@@ -1,12 +1,13 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  // fhevm ships .sol Solidity files — exclude it from bundling entirely.
-  // It's loaded via dynamic import() at browser runtime only.
+  // fhevm ships WASM files — exclude from server bundling for client components.
+  // @zama-fhe/relayer-sdk is used in API routes (Node.js), not externalized.
   serverExternalPackages: ["fhevm", "fhevmjs"],
 
   // Turbopack config (Next 16 default dev bundler)
   turbopack: {
+    root: __dirname,
     resolveExtensions: [".tsx", ".ts", ".jsx", ".js", ".json", ".css"],
   },
 

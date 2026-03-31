@@ -1,183 +1,72 @@
-// Contract addresses — set via .env.local after deployment
-export const FACTORY_ADDRESS = (process.env.NEXT_PUBLIC_FACTORY_ADDRESS || '0x0000000000000000000000000000000000000000') as `0x${string}`
-export const ROUTER_ADDRESS  = (process.env.NEXT_PUBLIC_ROUTER_ADDRESS  || '0x0000000000000000000000000000000000000000') as `0x${string}`
-export const SHADE_USDC_ADDRESS = (process.env.NEXT_PUBLIC_SHADE_USDC_ADDRESS || '0x0000000000000000000000000000000000000000') as `0x${string}`
-export const SHADE_ETH_ADDRESS  = (process.env.NEXT_PUBLIC_SHADE_ETH_ADDRESS  || '0x0000000000000000000000000000000000000000') as `0x${string}`
+import { parseAbi } from 'viem'
 
-// Minimal ABIs for contract interaction
-export const SHADE_POOL_ABI = [
-  {
-    name: 'swap',
-    type: 'function',
-    stateMutability: 'nonpayable',
-    inputs: [
-      { name: 'tokenIn', type: 'address' },
-      { name: 'encAmountIn', type: 'bytes32' },
-      { name: 'proofIn', type: 'bytes' },
-    ],
-    outputs: [{ name: 'amountOut', type: 'bytes32' }],
-  },
-  {
-    name: 'addLiquidity',
-    type: 'function',
-    stateMutability: 'nonpayable',
-    inputs: [
-      { name: 'encAmountA', type: 'bytes32' },
-      { name: 'proofA', type: 'bytes' },
-      { name: 'encAmountB', type: 'bytes32' },
-      { name: 'proofB', type: 'bytes' },
-    ],
-    outputs: [],
-  },
-  {
-    name: 'removeLiquidity',
-    type: 'function',
-    stateMutability: 'nonpayable',
-    inputs: [
-      { name: 'encShares', type: 'bytes32' },
-      { name: 'proofShares', type: 'bytes' },
-    ],
-    outputs: [],
-  },
-  {
-    name: 'getEncryptedReserves',
-    type: 'function',
-    stateMutability: 'view',
-    inputs: [],
-    outputs: [
-      { name: '', type: 'bytes32' },
-      { name: '', type: 'bytes32' },
-    ],
-  },
-  {
-    name: 'getEncryptedLPShare',
-    type: 'function',
-    stateMutability: 'view',
-    inputs: [{ name: 'provider', type: 'address' }],
-    outputs: [{ name: '', type: 'bytes32' }],
-  },
-  {
-    name: 'tokenA',
-    type: 'function',
-    stateMutability: 'view',
-    inputs: [],
-    outputs: [{ name: '', type: 'address' }],
-  },
-  {
-    name: 'tokenB',
-    type: 'function',
-    stateMutability: 'view',
-    inputs: [],
-    outputs: [{ name: '', type: 'address' }],
-  },
-  {
-    name: 'Swap',
-    type: 'event',
-    inputs: [
-      { name: 'sender', type: 'address', indexed: true },
-      { name: 'tokenIn', type: 'address', indexed: false },
-      { name: 'tokenOut', type: 'address', indexed: false },
-    ],
-  },
-] as const
+export const DEV_MODE = false // Real implementation mode
 
-export const SHADE_FACTORY_ABI = [
-  {
-    name: 'getPool',
-    type: 'function',
-    stateMutability: 'view',
-    inputs: [
-      { name: 'tokenA', type: 'address' },
-      { name: 'tokenB', type: 'address' },
-    ],
-    outputs: [{ name: '', type: 'address' }],
-  },
-  {
-    name: 'totalPools',
-    type: 'function',
-    stateMutability: 'view',
-    inputs: [],
-    outputs: [{ name: '', type: 'uint256' }],
-  },
-  {
-    name: 'createPool',
-    type: 'function',
-    stateMutability: 'nonpayable',
-    inputs: [
-      { name: 'tokenA', type: 'address' },
-      { name: 'tokenB', type: 'address' },
-    ],
-    outputs: [{ name: 'pool', type: 'address' }],
-  },
-] as const
+const ZERO_ADDR = '0x0000000000000000000000000000000000000000'
 
-export const SHADE_ROUTER_ABI = [
-  {
-    name: 'swap',
-    type: 'function',
-    stateMutability: 'nonpayable',
-    inputs: [
-      { name: 'tokenIn', type: 'address' },
-      { name: 'tokenOut', type: 'address' },
-      { name: 'encAmountIn', type: 'bytes32' },
-      { name: 'proofIn', type: 'bytes' },
-    ],
-    outputs: [{ name: 'amountOut', type: 'bytes32' }],
-  },
-  {
-    name: 'addLiquidity',
-    type: 'function',
-    stateMutability: 'nonpayable',
-    inputs: [
-      { name: 'tokenA', type: 'address' },
-      { name: 'tokenB', type: 'address' },
-      { name: 'encAmountA', type: 'bytes32' },
-      { name: 'proofA', type: 'bytes' },
-      { name: 'encAmountB', type: 'bytes32' },
-      { name: 'proofB', type: 'bytes' },
-    ],
-    outputs: [],
-  },
-] as const
+// Real Sepolia fhEVM Contract Addresses
+const REAL_FACTORY_ADDRESS: `0x${string}` = '0x2e72DB6D15186caea378C623CEb8A82221564969'
+const REAL_ROUTER_ADDRESS: `0x${string}` = '0x9f99E9E0b264D6344c656b9aC9B604d9f319375e'
+const REAL_SHADE_USDC_ADDRESS: `0x${string}` = '0x246dC774887A4BD70e5B0A9A92E8b0065ba854aD'
+const REAL_SHADE_ETH_ADDRESS: `0x${string}` = '0x0c16DE61e9cAFD9fCB5DF1cd468c5FEA04E12910'
+const REAL_POOL_ADDRESS: `0x${string}` = '0xd0d50cD3c074457770e62828A9509256abB3E48f'
 
-export const ERC20_ABI = [
-  {
-    name: 'allowance',
-    type: 'function',
-    stateMutability: 'view',
-    inputs: [
-      { name: 'owner',   type: 'address' },
-      { name: 'spender', type: 'address' },
-    ],
-    outputs: [{ name: '', type: 'uint256' }],
-  },
-  {
-    name: 'approve',
-    type: 'function',
-    stateMutability: 'nonpayable',
-    inputs: [
-      { name: 'spender', type: 'address' },
-      { name: 'amount',  type: 'uint256' },
-    ],
-    outputs: [{ name: '', type: 'bool' }],
-  },
-  {
-    name: 'balanceOf',
-    type: 'function',
-    stateMutability: 'view',
-    inputs: [{ name: 'account', type: 'address' }],
-    outputs: [{ name: '', type: 'uint256' }],
-  },
-  {
-    name: 'mint',
-    type: 'function',
-    stateMutability: 'nonpayable',
-    inputs: [
-      { name: 'to', type: 'address' },
-      { name: 'amount', type: 'uint64' },
-    ],
-    outputs: [],
-  },
-] as const
+// Zama fhEVM Sepolia Infrastructure
+export const SEPOLIA_FHEVM_GATEWAY_URL = 'https://fhevm-gateway.zama.ai'
+export const SEPOLIA_KMS_CONTRACT_ADDRESS: `0x${string}` = '0x9D6891A6240D6130c54ae243d8005063D05fE14b'
+export const SEPOLIA_ACL_CONTRACT_ADDRESS: `0x${string}` = '0xFee8407e2f5e3Ee68ad77cAE98c434e637f516EC'
 
-export const SHADE_TOKEN_ABI = [...ERC20_ABI] as const
+// Helper to get address from deployed environment configuration
+const getAddress = (envVar: string, deployedAddress: `0x${string}`): `0x${string}` => {
+  const envVal = process.env[envVar] as `0x${string}` | undefined
+  if (envVal && envVal !== ZERO_ADDR) {
+    return envVal
+  }
+  return deployedAddress
+}
+
+// Export getter functions — binding directly to production deployments
+export const getFactoryAddress = (): `0x${string}` => 
+  getAddress('NEXT_PUBLIC_FACTORY_ADDRESS', REAL_FACTORY_ADDRESS)
+export const getRouterAddress = (): `0x${string}` => 
+  getAddress('NEXT_PUBLIC_ROUTER_ADDRESS', REAL_ROUTER_ADDRESS)
+export const getShadeUsdcAddress = (): `0x${string}` => 
+  getAddress('NEXT_PUBLIC_SHADE_USDC_ADDRESS', REAL_SHADE_USDC_ADDRESS)
+export const getShadeEthAddress = (): `0x${string}` => 
+  getAddress('NEXT_PUBLIC_SHADE_ETH_ADDRESS', REAL_SHADE_ETH_ADDRESS)
+export const getKnownPoolAddress = (): `0x${string}` =>
+  getAddress('NEXT_PUBLIC_POOL_ADDRESS', REAL_POOL_ADDRESS)
+
+export const getAddressForToken = (symbol: string): `0x${string}` => {
+  if (symbol === 'USDC') return getShadeUsdcAddress()
+  if (symbol === 'ETH' || symbol === 'WETH') return getShadeEthAddress()
+  return ZERO_ADDR as `0x${string}`
+}
+
+export const ERC20_ABI = parseAbi([
+  "function approve(address spender, uint64 amount) returns (bool)",
+  "function allowance(address owner, address spender) view returns (uint64)",
+  "function balanceOf(address account) view returns (uint256)",
+  "function mint(address to, uint256 amount)",
+  "function decimals() view returns (uint8)",
+  "function name() view returns (string)",
+  "function symbol() view returns (string)",
+])
+
+export const SHADE_POOL_ABI = parseAbi([
+  "function addLiquidity(bytes32 encAmountA, bytes calldata proofA, bytes32 encAmountB, bytes calldata proofB)",
+  "function swap(address tokenIn, bytes32 encAmountIn, bytes calldata proofIn)",
+  "function getEncryptedReserves() view returns (bytes32, bytes32)",
+  "function lpShares(address) view returns (bytes32)",
+])
+
+export const SHADE_ROUTER_ABI = parseAbi([
+  "function swap(address tokenIn, address tokenOut, bytes32 encAmountIn, bytes calldata proofIn)",
+  "function addLiquidity(address tokenA, address tokenB, bytes32 encAmountA, bytes calldata proofA, bytes32 encAmountB, bytes calldata proofB)"
+])
+
+export const SHADE_FACTORY_ABI = parseAbi([
+  "function getPool(address tokenA, address tokenB) view returns (address)",
+  "function totalPools() view returns (uint256)",
+  "function createPool(address tokenA, address tokenB) returns (address)"
+])
